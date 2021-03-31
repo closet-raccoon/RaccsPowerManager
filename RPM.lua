@@ -39,7 +39,7 @@ local motd_color = colors.lightBlue
 local use_live_motd = true
 local motd_link = "https://pastebin.com/raw/rxd5wQFc"
 
-local version = 2.1
+local version = 2.2
  
 local enable_logging = true
 local log_to = "monitor_1"

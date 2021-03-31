@@ -1,5 +1,5 @@
 --[[
-        ClosetAPI version 1.7.5
+        ClosetAPI version 1.7.6
 
 All Rights Reserved, if file bellow is edited in anyway do not redistribute!
 
@@ -27,7 +27,7 @@ local args = {...}  --Incase i ever need then when debuging
 local arg1 = args[1]
 local arg2 = args[2]
 local debug = true  --Enable this to disable updating and/or if you are changing code in here
-VERSION="1.7.5" -- added minor 1.12 support for plethra peripherals ( more 1.12 suport very soon )
+VERSION="1.7.6" -- added minor 1.12 support for plethra peripherals ( more 1.12 suport very soon )
 
 getAllPeripherals = function(silent) --Silent makes it not return the full table(Non-Silent by default)
 
