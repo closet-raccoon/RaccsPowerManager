@@ -39,7 +39,7 @@ function printlink(link)
 end
 
 function getLinks()
-    if use_live_file_list == false or type(link_location) ~= string then
+    if use_live_file_list == false or type(link_location) ~= "string" then
         print("Using hard coded links!")
         return {
             RPM = "https://raw.githubusercontent.com/closet-raccoon/RaccsPowerManager/main/RPM.lua",
@@ -52,7 +52,7 @@ function getLinks()
             local data = resp.readAll()
             resp.close()
             local finished = textutils.unserialize(data)
-            if finished == nil or finished ~= table then
+            if finished == nil or type(finished) ~= "table" then
                 print("Was not able to download links from "..link_location)
                 print("Will continue with hard coded links!")
                 return {
@@ -126,4 +126,3 @@ if http then
 else
     error("http API not found, is the module loaded?")
 end
-print("Completed thanks for using Raccs Installer!")
