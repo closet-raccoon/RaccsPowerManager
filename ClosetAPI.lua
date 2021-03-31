@@ -353,5 +353,3 @@ function tabeUnnester(table)  -- basic unpacker able to unpack double nested tab
         end
     end
 end
-
-if false then _ClosetAPI = {FileManager = FileManager,APIdebug = APIdebug,drawLine = drawLine,drawProg = drawProg,drawText = drawText,getAllPeripherals = getAllPeripherals,closetUpdate = closetUpdate, tabeSave = tabeSave,tabeLoad = tabeLoad, tabeUnnester = tabeUnnester, numbShorten = numbShorten} end

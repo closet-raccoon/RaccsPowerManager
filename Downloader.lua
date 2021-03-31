@@ -7,6 +7,11 @@ local use_live_file_list = true
 local link_location = "https://raw.githubusercontent.com/closet-raccoon/RaccsPowerManager/main/filelist"
 local links, startup
 
+if not os.version then
+    print("WHERES COMPUTERCRAFT.... WHAT HAVE YOU DONE!")
+    print("This script only functions on computercraft for minecraft!")
+    return "This is not computercraft"
+end
 
 if type(args) == "table" then
     if args[1] == "help" then

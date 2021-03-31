@@ -9,19 +9,23 @@ Credits ©:
 ]]
  
  
-if false then     ClosetAPI = _G._ClosetAPI     end -- Visual Studio Include
- 
+if false then     require("ClosetAPI.lua")     end -- Visual Studio
 local capi
-os.loadAPI("ClosetAPI.lua")
-if _G["ClosetAPI.lua"] == nil then  -- 1.12 compat
-    if _G["ClosetAPI"] == nil then
-        error("API not loaded")
-    else
-        capi = _G["ClosetAPI"]
-    end
+
+if fs.exists("ClosetAPI.lua") then  -- 1.12 support
+    os.loadAPI("ClosetAPI.lua")
+elseif fs.exists("ClosetAPI") then
+    os.loadAPI("ClosetAPI")
 else
-    capi = _G["ClosetAPI.lua"]
+    error("API not found")
 end
+
+if _G["ClosetAPI.lua"] then  -- 1.12 support
+    capi = _G["ClosetAPI.lua"]
+elseif _G["ClosetAPI"] then
+    capi = _G["ClosetAPI"]
+end
+
 if capi == nil then error("API was not found") end
  
 local error_on_wrong_ver = nil -- set to nil to disable!
@@ -30,9 +34,11 @@ local name = "Racc's Power Management"
 local short_name = "~R-P-M~"
 local name_color = colors.blue
  
-local motd = "Complete Rewrite FTW"
-local motd_color = colors.pink
- 
+local motd = "Enjoy"
+local motd_color = colors.lightBlue
+local use_live_motd = true
+local motd_link = "https://pastebin.com/raw/rxd5wQFc"
+
 local version = 2.1
  
 local enable_logging = true
@@ -106,7 +112,35 @@ function loadSettings()
         log("File, "..settings_save_file.." ,was not able to load!",3)
     end
 end
- 
+
+if http then
+    if use_live_motd == true and type(motd_link) == "string" then
+        local resp = http.get(motd_link)
+        if type(resp) == "table" then
+            if resp.readLine() == "Format : 1" then
+                log("Connected to live motd server",1)
+                local new_motd = resp.readLine()
+                motd = new_motd
+
+                local ncolor = tonumber(resp.readLine())
+                if type(ncolor) == "number" then
+                    if colors.test(65535,ncolor) then
+                        log("Using live MOTD color",1)
+                        motd_color = ncolor
+                    else
+                        log("Live MOTD color was not in the color range!",1)
+                    end
+                end
+            else
+                log("MOTD was not in a supported format, try updating RPM",2)
+            end
+            resp.close()
+        else
+            log("Was unable to connect to live MOTD server, using default motd.",2)
+        end
+    end
+end
+
 function autoDetect()
     log("Running autoDetect()",1)
     local d = capi.getAllPeripherals()
