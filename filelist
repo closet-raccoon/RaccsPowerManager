@@ -2,4 +2,5 @@
     RPM = "https://raw.githubusercontent.com/closet-raccoon/RaccsPowerManager/main/RPM.lua",
     ClosetAPI = "https://raw.githubusercontent.com/closet-raccoon/RaccsPowerManager/main/ClosetAPI.lua",
     startup = "https://raw.githubusercontent.com/closet-raccoon/RaccsPowerManager/main/startup.lua",
+    updater = "https://raw.githubusercontent.com/closet-raccoon/RaccsPowerManager/main/Downloader.lua",
 }

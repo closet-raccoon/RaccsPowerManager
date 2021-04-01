@@ -1,24 +1,6 @@
 --[[
-        ClosetAPI version 1.7.6
-
-All Rights Reserved, if file bellow is edited in anyway do not redistribute!
-
-~~~~~~~Coders Using Visual Studio Code~~~~~~~~~
-    Visual Studio Global fix Simply use:
-
-        if false then   local ClosetAPI = _ClosetAPI    end
-
-    This will emulate the way Computer Craft adds apis like tables to a global table
-
-
-
-Loading APIs with the .lua extension is done as such
-
-
-os.loadAPI("FileName.lua")
-FileName = _G["FileName.lua"]           Or below to rename it
-CustomeAPIname = _G["FileName.lua"]
-
+ClosetAPI version 1.7.6
+    All Rights Reserved, if file bellow is edited in anyway do not redistribute!
 ]]--
 
 local p = peripheral
@@ -27,7 +9,7 @@ local args = {...}  --Incase i ever need then when debuging
 local arg1 = args[1]
 local arg2 = args[2]
 local debug = true  --Enable this to disable updating and/or if you are changing code in here
-VERSION="1.7.6" -- added minor 1.12 support for plethra peripherals ( more 1.12 suport very soon )
+local version ="1.7.6" -- added minor 1.12 support for plethra peripherals ( more 1.12 suport very soon )
 
 getAllPeripherals = function(silent) --Silent makes it not return the full table(Non-Silent by default)
 
@@ -78,26 +60,7 @@ ExtraMonitor = {
 }
 
 closetUpdate = function()
-    if debug == false then
-        local p = fs.open("ClosetAPI","r")
-        local pr = p.readAll()
-        p.close()
-        
-
-        local l = http.get("https://pastebin.com/raw/pfJSTtvS")
-        local lr = l.readAll()
-
-        if pr == lr then
-            print("Up to date")
-        else
-            local pw = fs.open("ClosetAPI","w")
-            print("updating")
-            pw.write(lr)
-            pw.close()
-        end
-    else
-        error("You are in debug/coding mode I would highly recommend not updating right now!")
-    end
+    return "disabled"
 end
 
 FileManager = {

@@ -1,4 +1,4 @@
--- V2.2 
+-- V2.2
 -- All Rights Reserved, if file bellow is edited in anyway do not redistribute!
  
 --[[ 
@@ -41,9 +41,9 @@ local motd_link = "https://pastebin.com/raw/rxd5wQFc"
 
 local version = 2.2
  
-local enable_logging = true
+local enable_logging = false
 local log_to = "monitor_1"
-local log_file = "RPM LOG"
+local log_file = nil
 local Power_Scope_Modifier = nil --Will divide the capacity of connected powerdevices by this number when making the progress bar to allow for more finite storage on large storage devices this is skipped if the number is <1 or nil
 -- ^ ability to set to each power device is coming!
  
@@ -74,9 +74,8 @@ local monitor_settings
 local function defineSettings()
     monitor_settings = {}
 end
- 
+
 term.setTextScale = function() return end -- Fixes the only thing that monitors can do that computers will error on
- 
 local log_to_original_input
 function prepDebugMon()
     if enable_logging == false then return end
