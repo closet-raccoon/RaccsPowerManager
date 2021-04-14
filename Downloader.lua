@@ -1,7 +1,7 @@
 -- Installer for RPM
 -- Feel free to edit, redistrabute and copy!
 
-local args = ...
+local args = {...}
 
 local use_live_file_list = true
 local link_location = "https://raw.githubusercontent.com/closet-raccoon/RaccsPowerManager/main/filelist"
@@ -27,6 +27,9 @@ if type(args) == "table" then
     elseif args[1] == false then
         print("Installing without startup!")
         startup = false
+    end
+    if args[1] == "latest" then
+        link_location =  "https://pastebin.com/raw/u4PDfDHv" 
     end
 else
     startup = true
@@ -131,3 +134,6 @@ if http then
 else
     error("http API not found, is the module loaded?")
 end
+
+
+return true

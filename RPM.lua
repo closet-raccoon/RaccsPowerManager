@@ -75,6 +75,13 @@ local monitor_settings
 local function defineSettings()
     monitor_settings = {}
 end
+
+local startargs = {...}
+if startargs[1] == "update" or startargs[1] == "reset" then
+    os.run({},"updater.lua")
+    os.exit(0)
+end
+
 terminate = false
 running = true
 
