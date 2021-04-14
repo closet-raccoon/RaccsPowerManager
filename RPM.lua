@@ -820,7 +820,6 @@ topBar = {
             local cx,cy = mon.getCursorPos()
             local mx,my = mon.getSize()
             mon.setTextColor(name_color)
-            mon.setTextColor(self.theme)
             bwrite(name, mx/2 - (#name/2) + 1 ,cy,mon)
             mon.setTextColor(motd_color)
             bwrite(motd, mx/2 - (#motd/2) + 1 ,cy+1,mon)
