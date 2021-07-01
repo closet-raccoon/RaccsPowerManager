@@ -2,7 +2,7 @@
 -- All Rights Reserved, if file bellow is edited in anyway do not redistribute!
 
 --[[
-Credits ©:
+Credits (C):
     Steam:      Closet Raccoon
     Discord:    Closet Raccoon#5092  -- Bug reports are welcome
     Minecraft:  ClosetRedPanda
