@@ -24,6 +24,8 @@ if _G["ClosetAPI.lua"] then  -- 1.12 support
     capi = _G["ClosetAPI.lua"]
 elseif _G["ClosetAPI"] then
     capi = _G["ClosetAPI"]
+else
+    error("API failed to load")
 end
 
 if capi == nil then error("API was not found") end
@@ -36,11 +38,11 @@ local name_color = colors.blue
 
 local motd = "Enjoy"
 local motd_color = colors.lightBlue
-local use_live_motd = true
+local use_live_motd = false
 local motd_link = "https://pastebin.com/raw/rxd5wQFc"
 local update_motd_with_f5 = false -- Disable for more preforment f5 refreshing ( Standered update refreshing not effected [f4] )
 
-local version = 2.3
+local version = 2.4 -- Fixed bugs
 
 local enable_logging = true
 local log_to = "left"
@@ -78,8 +80,46 @@ end
 
 local startargs = {...}
 if startargs[1] == "update" or startargs[1] == "reset" then
-    os.run({},"updater.lua")
-    os.exit(0)
+    if fs.exists("Downloader.lua") == true then
+        os.run({},"Downloader.lua")
+    elseif fs.exists("updater.lua") == true then
+        os.run({},"updater.lua")
+    else
+        print("Update files not found")
+        print("Would you like to download them? Y/N")
+        local event
+        repeat
+            event = {os.pullEvent()}
+            print(event[1].."  "..tostring(event[2]))
+        until (event[2] == keys.y or event[2] == keys.n) and event[1] == "key_up"
+        if event[2] == keys.y then 
+            if http == nil then
+                error("Http is not allowed on this computer!")
+                return "Http is not allowed on this computer!"
+            end
+            
+            local link = "https://raw.githubusercontent.com/closet-raccoon/RaccsPowerManager/main/Downloader.lua"
+            print("Connecting and downloading")
+            local resp,err1 = http.get(link)
+            if resp == nil then 
+                term.setTextColor(colors.red)
+                print("An error occoured while connecting its possible you arnt connected to the internet!")
+                error(tostring(err1))
+                term.setTextColor(colors.white)
+             end
+            local script = resp.readAll()
+            local installer, err2 = loadstring(script)
+            if installer and not (err1 or err2) then
+                print("Download completed")
+                installer()
+            else
+                error(err1.."  "..err2)
+            end
+        end
+    end 
+    print("update complete rebooting")
+    sleep(.5)
+    os.reboot()
 end
 
 terminate = false
@@ -827,9 +867,9 @@ topBar = {
             local cx,cy = mon.getCursorPos()
             local mx,my = mon.getSize()
             mon.setTextColor(name_color)
-            bwrite(name, mx/2 - (#name/2) + 1 ,cy,mon)
+            bwrite(name, mx/2 - (#name/2) + 1 ,cy,mon,true)
             mon.setTextColor(motd_color)
-            bwrite(motd, mx/2 - (#motd/2) + 1 ,cy+1,mon)
+            bwrite(motd, mx/2 - (#motd/2) + 1 ,cy+1,mon,true)
             mon.setCursorPos(1,cy+4)
         end
     end,
@@ -902,7 +942,7 @@ local event_list = {
         events = {
             "key_up"
         },
-        log = false,
+        log = true,
 
     },
     panic = {
@@ -1082,5 +1122,10 @@ end
 
 log("EOF reached",1)
 capi.FileManager.CloseCurrentW()
+term.clear()
+term.setCursorPos(1,1)
+term.setTextColor(name_color)
+print(name.."  "..version)
+term.setTextColor(colors.white)
 
 -- You actually scrolled this far down...
