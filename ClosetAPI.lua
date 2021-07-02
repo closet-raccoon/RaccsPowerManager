@@ -1,5 +1,5 @@
 --[[
-ClosetAPI version 1.7.6
+ClosetAPI version 1.7.7
     All Rights Reserved, if file bellow is edited in anyway do not redistribute!
 ]]--
 
@@ -9,7 +9,7 @@ local args = {...}  --Incase i ever need then when debuging
 local arg1 = args[1]
 local arg2 = args[2]
 local debug = true  --Enable this to disable updating and/or if you are changing code in here
-local version ="1.7.6" -- added minor 1.12 support for plethra peripherals ( more 1.12 suport very soon )
+local version ="1.7.7" -- added minor 1.12 support for plethra peripherals ( more 1.12 suport very soon )
 
 getAllPeripherals = function(silent) --Silent makes it not return the full table(Non-Silent by default)
 
@@ -271,12 +271,14 @@ numbShorten = function(num, f, table, places, significance)--OLD DO NOT USE numb
 end
 
 function numbShorten2(numb,places,returntype) -- Input Number, Floor Significance | ver 4.0
+    if numb == nil then return end
     if numb < 1000 then return numb end
     if places == nil then places = 1 end
     numb = tostring(numb)
     local count = math.floor(#numb/3)
+    if #numb%3 == 0 then count = count-1 end
     local letters = {"K","M","B","T","Q","Qi","Sx","Sp","N","D","Ud","Du","Te","Qa","Qid"}
-    
+    local pfnumb
     if returntype == nil or returntype == 1 then 
         pfnumb = math.floor( numb / 10^(count*3) *10^places )/10^places
         return pfnumb..letters[count]
