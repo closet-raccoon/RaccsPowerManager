@@ -6,6 +6,7 @@ A lua script for ComputerCraft that displays and manages base information.
 pastebin run 5QbYq1HL
 
 if any errors occurre try doing it on singleplayer if errors persist please contact me!
+Also if your having issues with it downloading blank files, most common issues with pre 1.12 versions, please [look here for more info](https://www.computercraft.info/forums2/index.php?/topic/26882-resource-pack-pastebin-fix-for-pre-mc18x-users "ComputerCraft official wiki")
 
 # Files:
 
