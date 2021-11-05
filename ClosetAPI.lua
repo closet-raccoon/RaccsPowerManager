@@ -28,7 +28,7 @@ getAllPeripherals = function(silent) --Silent makes it not return the full table
 
         if curtype == "monitor" then
             table.insert(monitors,current)
-        elseif curtype == "BigReactors-Reactor" then
+        elseif curtype == "BigReactors-Reactor" or curtype == "BiggerReactors-Reactor" then
             table.insert(reactors,current)
         elseif curtype == "tile_blockcapacitorbank_name"    or string.find(curtype,"tile_thermalexpansion_cell") == 1    or curtype == "draconic_rf_storage"    or curtype == "thermalexpansion:storage_cell" then
             table.insert(powerdevices,current)
