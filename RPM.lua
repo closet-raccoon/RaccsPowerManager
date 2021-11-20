@@ -1,6 +1,8 @@
 -- V2.2
 -- All Rights Reserved, if file bellow is edited in anyway do not redistribute!
 
+-- Settings below starting on line 37 all vars are change able!
+
 --[[
 Credits (C):
     Steam:      Closet Raccoon
@@ -31,24 +33,24 @@ end
 if capi == nil then error("API was not found") end
 
 local error_on_wrong_ver = nil -- set to nil to disable!
-
+local log
 local name = "Racc's Power Management"
 local short_name = "~R-P-M~"
 local name_color = colors.blue
 
-local motd = "Enjoy"
+local motd = ""
 local motd_color = colors.lightBlue
 local use_live_motd = false
 local motd_link = "https://pastebin.com/raw/rxd5wQFc"
 local update_motd_with_f5 = false -- Disable for more preforment f5 refreshing ( Standered update refreshing not effected [f4] )
 
-local version = 2.4 -- Fixed bugs
+local version = "2.4 SUPER WIP BUILD!"
+local build = "Latest"
 
 local enable_logging = true
 local log_to = "left"
 local log_file = nil
-local Power_Scope_Modifier = nil --Will divide the capacity of connected powerdevices by this number when making the progress bar to allow for more finite storage on large storage devices this is skipped if the number is <1 or nil
--- ^ ability to set to each power device is coming!
+local Power_Scope_Modifier = nil
 
 local auto_detect = true -- if true then it will auto add all connected peripherals
 
@@ -125,42 +127,31 @@ end
 terminate = false
 running = true
 
-term.setTextScale = function() return end -- Fixes the only thing that monitors can do that computers will error on
+term.setTextScale = function() end -- Fixes the only thing that monitors can do that computers will error on
 local log_to_original_input
-function prepDebugMon()
-    if enable_logging == false then return end
-    if log_to == term then return end
-    if peripheral.isPresent(log_to) == true then
-        local temp = peripheral.wrap(log_to)
-        temp.clear()
-        temp.setCursorPos(1,0)
-    end
-end
-prepDebugMon()
 
-function redefine_log()
-    log = function(text,level)
-        if enable_logging == false then return end
-        if not level then level = 1 end 
 
-        if (type(log_to) == "string" and peripheral.isPresent(log_to) == true) then
-            log_to_original_input = log_to
-            log_to = peripheral.wrap(log_to)
-        elseif log_to_original_input == nil then
-            log_to_original_input = log_to
+local function preplog()
+
+    local function prepDebugMon()
+        if log_to == term then return term end
+        if peripheral.isPresent(log_to) == true then
+            local temp = peripheral.wrap(log_to)
+            temp.clear()
+            temp.setCursorPos(1,0)
+            return temp
         end
-        
-        if log_to.write == nil then return end
-        if capi.FileManager.CurrentFileW == "" and log_file ~= nil then capi.FileManager.OpenFileW(log_file) end
-        capi.APIdebug.log(text,level,enable_logging,log_to,log_file)
     end
+    
+    log = APIdebug:prepLog(enable_logging,prepDebugMon(),nil,nil,nil)
     log("Log output is ready",1)
 end
 
-if enable_logging == true then redefine_log() log("Logging is enabled",1) else log = function () return end end
+preplog()
+log("Logging is enabled",1)
 
-function loadSettings()
-    local temp = capi.tabeLoad(settings_save_file)
+local function loadSettings()
+    local temp = capi.tableLoad(settings_save_file)
     if type(temp) == "table"  then
         monitor_settings = temp
     else
@@ -168,7 +159,7 @@ function loadSettings()
     end
 end
 
-function getMOTD()
+local function getMOTD()
     if http then
         if use_live_motd == true and type(motd_link) == "string" then
             local resp = http.get(motd_link)
@@ -210,7 +201,7 @@ function getMOTD()
     end
 end
 
-function autoDetect()
+local function autoDetect()
     log("Running autoDetect()",1)
     local d = capi.getAllPeripherals()
     if d == {} or d == nil or type(d) ~= "table" then
@@ -227,7 +218,7 @@ function autoDetect()
     end
 end
 
-function prep()
+local function prep()
     log("running prep()",1)
     log("Removing faulty peripherals",1)
     for i = 1,#mons do
@@ -256,7 +247,7 @@ function prep()
     end
 end
 
-function totalTable(intable)
+local function totalTable(intable)
     log("Totaling "..tostring(intable),1)
     local outtable = {
         activeAmount = 0,
@@ -357,7 +348,7 @@ end
 
 
 if tonumber(string.sub(os.version(),8)) < 1.79 then
-log("MC version is lower then 1.12",1)
+    log("MC version is lower then 1.12",1)
     log("1.7.10 is the prefered version to use this with!")
     getInfo = getInfo1710
 else
@@ -370,15 +361,15 @@ end
 
 
 
-function bwrite(text,x,y,mon,clear)
+local function bwrite(text,x,y,mon,clear)
     if mon == nil or type(mon) ~= "table" then log("Basic write got bad mon variable",2) return end
     mon.setCursorPos(x,y)
     if clear == true then mon.clearLine() end
     mon.write(text)
 end
 
-function comma_value(amount,places) --stolen right off 'http://lua-users.org/wiki/FormattingNumbers'
-    if places == nil then places = 2 end
+local function comma_value(amount,places) --stolen right off 'http://lua-users.org/wiki/FormattingNumbers'
+    places = places or 2
     local formatted = math.floor(amount*10^places)/10^places
     while true do  
       formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
@@ -389,7 +380,7 @@ function comma_value(amount,places) --stolen right off 'http://lua-users.org/wik
     return formatted
 end
 
-function reShellTerm()
+local function reShellTerm()
     log("reshelling term",1)
     term.clear()
     local mX,mY = term.getSize()
@@ -445,43 +436,7 @@ local button = {
     end,
 }
 
-local tabbuttons = {} --wip
-local tabbutton = {
-    createButton = function(self,maxX,maxY,minX,minY,funct,name,monitor,tablename) -- WARNING FUNCTIONS MUST HAVE A SELF DELCARATION!
-        if type(maxX) ~= "number" or type(maxY) ~= "number" or type(minY) ~= "number" or type(minX) ~= "number" or type(funct) ~= "function" or type(monitor) ~= "string" or type(tablename) ~= "string" then
-            log("Atempted to create button with args that wernt the correct type",4)
-            return
-        end
-        tabbuttons[monitor][tablename] = {
-            maxX = maxX,
-            maxY = maxY,
-            minX = minX,
-            minY = minY,
-            monitor = monitor,
-            name = name,
-            run = funct,
-        }
-    end,
-    process = function (self,event)
-        log("Processing possible button.",1)
-        local call = event[1]
-        local monitor = event[2]
-        local cX = event[3]
-        local cY = event[4]
-        if tabbuttons[monitor] == {} or tabbuttons[monitor] == nil then log("'"..monitor.."' has no buttons!",1) return end
-        for k,v in pairs(tabbuttons[monitor]) do
-            log("Testing "..k,1)
-            if cX >= v.minX and cX <= v.maxX   then
-                if cY >= v.minY and cY <= v.maxY   then
-                    log("Button named '"..v.name.."' was called",1)
-                    v:run()
-                end
-            end
-        end
-    end,
-}
-
-local function wait ( time ) -- Off wiki to allow for events to handle during sleep timers without using parallel
+local function wait ( time ) -- Idea stolen wiki to allow for events to handle during sleep timers without using parallel
     local timer_finished = false
     local timer = os.startTimer(time)
 
@@ -497,7 +452,7 @@ local function wait ( time ) -- Off wiki to allow for events to handle during sl
 end
 
 local tabs
-function tabDef()
+local function tabDef()
     tabs = {}
     tabs.all = {
         display = function(self,mon,data,mon_name)
@@ -603,14 +558,14 @@ function tabDef()
                         log(mon_name.." displaying 'reacs'",1)
                         local mon = mon
                         local mx,my = mon.getSize()
-                        local size = 4
+                        local size = self.size 
 
                         for g = 1,#reacs do
                             local cur = reacs[g]
                             local cdata = data[cur]
                             if peripheral.isPresent(cur) == true and cdata ~= nil then
                                 local cx,cy = mon.getCursorPos()
-                                if cy+size > my then break end
+                                if cy+size > my then log("Cant fit all reacs on monitor "..mon_name.."! \n Failed on "..cur,3) break end
                                 mon.setTextColor(self.theme)
                                 bwrite("Reactor "..g..":",1,cy,mon)
                                 if cdata["name"] == "DISCONNECTED" then
@@ -642,6 +597,7 @@ function tabDef()
                     end
                 end,
                 name = "Reactors",
+                size = 4,
                 theme = theme_colors.reacs,
                 delete = function()
                     return false
@@ -659,12 +615,12 @@ function tabDef()
                         log(mon_name.." displaying 'pds'",1)
                         local mon = mon
                         local mx,my = mon.getSize()
-                        local size = 3 -- size of all the elements of the for loop input not including spacer
+                        local size = self.size -- size of all the elements of the for loop input not including spacer
                         for g = 1,#pds do
                             local cur = pds[g]
                             local cdata = data[cur]
                             local cx,cy = mon.getCursorPos()
-                            if cy+size > my then break end
+                            if cy+size > my then log("Cant fit all pds on monitor "..mon_name.."! \n Failed on "..cur,3) break end
                             if peripheral.isPresent(cur) == true and cdata ~= nil then
                                 mon.setTextColor(self.theme)
                                 bwrite("Power Device "..g..":",1,cy,mon)
@@ -678,6 +634,7 @@ function tabDef()
                     end
                 end,
                 name = "Power",
+                size = 3,
                 theme = theme_colors.power,
                 delete = function()
                     return false
@@ -695,13 +652,13 @@ function tabDef()
                     log(mon_name.." displaying 'pds'",1)
                     local mon = mon
                     local mx,my = mon.getSize()
-                    local size = 3 -- size of all the elements of the for loop input not including spacer
+                    local size = self.size  -- size of all the elements of the for loop input not including spacer
                     mon.setTextColor(self.theme)
                     for i = 1,#turbs do
                         local cur = turbs[i]
                         local cdata = data[cur]
                         local cx,cy = mon.getCursorPos()
-                        if cy+size > my then break end
+                        if cy+size > my then log("Cant fit all turbs on monitor "..mon_name.."! \n Failed on "..cur,3) break end
                         bwrite("Turbine "..i..": ",1,cy,mon)
                         if cdata["name"] == "DISCONNECTED" then
                             local r = "DISCONNECTED"
@@ -723,6 +680,7 @@ function tabDef()
                 end
             end,
             name = "Turbines",
+            size = 3,
             theme = theme_colors.turbs,
             delete = function()
                 return false
@@ -735,7 +693,13 @@ function tabDef()
     local tabcount = 0
     for v,k in pairs(tabs) do
         if k ~= "amount" then
-            tabcount = tabcount +1
+            if v.display and v.size and v.name and v.theme then
+                log("Checked '"..k.."' and it has all required entires",1)
+                tabcount = tabcount +1
+            else
+                log("'"..k.."' Is missing key entires removing",3)
+                tabs[k] = nil
+            end
         end
     end
     tabs.amount = tabcount
@@ -886,6 +850,13 @@ local key_events = {
         end,
         log = false,
     },
+    f5 = {
+        run = function(self,events)
+            running = false
+            os.queueEvent("key_up",keys.f4)
+        end,
+        log = false,
+    },
 }
 
 local reversed_keys = {}
@@ -919,16 +890,6 @@ local event_list = {
         },
         log = false,
     },
-    peripheral_detach = {
-        run = function (self,events)
-            running = false
-            os.queueEvent("key_up",keys.f4)
-        end,
-        events = {
-            "peripheral_detach"
-        },
-        log = true,
-    },
     key_up = {
         run = function (self,events)
             if events[2] == keys.f5 then
@@ -955,6 +916,9 @@ local event_list = {
                 os.queueEvent("key_up",keys.f4)
             else
                 running = false
+                term.setTextColor(colors.red)
+                print("PANIC WAS CALLED ESCAPING!")
+                log("Due to panic force escaping!",2)
             end
         end,
         events = {
@@ -969,13 +933,14 @@ local event_list = {
         end,
         events = {
             "peripheral",
+            "peripheral_detach"
         },
         log = true,
     },
 
 }
 
-function readyEvents()
+local function readyEvents()
     local required = {
         "events",
         "run",
@@ -995,7 +960,7 @@ function readyEvents()
     end
 end
 
-function readyKeys()
+local function readyKeys()
     local required = {
         "run",
         "log",
@@ -1016,7 +981,7 @@ end
 
 readyKeys()
 readyEvents()
-function eventHandler(event)
+local function eventHandler(event)
     --log("eventHandler passed: "..event[1],1)
     for k,v in pairs(event_list) do
         local crnt = v.events
@@ -1046,7 +1011,7 @@ else
     defineSettings()
 end
 
-function prepMonitorSettings()
+local function prepMonitorSettings()
     for i = 1,#mons do
         if monitor_settings[mons[i]] == nil then
             monitor_settings[mons[i]] = {}
@@ -1065,13 +1030,14 @@ end
 
 getMOTD()
 reShellTerm()
-while terminate == false do
+while terminate == false do -- "Escape" step
     running = true
-    log("refreshing",1)
+    log("Entering loop")
     autoDetect()
     prep()
     prepMonitorSettings()
     tabDef()
+    
 
     local wins = {}
     for i = 1,#mons do
@@ -1084,40 +1050,44 @@ while terminate == false do
         local mx,my = lmon.getSize()
         wins[mons[i]] = window.create(lmon,1,3,mx,my-4)
     end
-    
+
     getInfo()
-    while running == true do
+    while running == true do -- Display loop
         for i = 1,#mons do
-            local lmon = peripheral.wrap(mons[i])
-            local lwin = wins[mons[i]]
-            local mx,my = lmon.getSize()
+                                -- theres no need to wrap the perpheral here cause we use windows now
+            local cmon = mons[i]
+            local lwin = wins[cmon]
             lwin.setCursorPos(1,1)
             lwin.setBackgroundColor(colors.black)
-            local crntset = monitor_settings[mons[i]]
-            local crntmon = mons[i]
-            local crnttabstring = monitor_settings[mons[i]].currentTab
-            local crnttab = tabs[monitor_settings[mons[i]].currentTab]
-            if (crnttabstring ~= monitor_settings[mons[i]].lastTab) and (crnttab ~= nil) then
-                log("'"..mons[i].."'".." changed tab to "..crnttabstring,2)
+
+            local crntset = monitor_settings[cmon] -- setting up args to reduce refering to large tables
+            local crnttabstring = monitor_settings[cmon].currentTab
+            local crnttab = tabs[monitor_settings[cmon].currentTab] -- The tabs table, for example in "all" it would hold the display class important other information
+            local crntlasttab = monitor_settings[cmon].lastTab
+
+            if (crnttabstring ~= crntlasttab) and (crnttab ~= nil) then
+                log("'"..cmon.."'".." changed tab to "..crnttabstring,2)
                 lwin.clear()
                 lwin.setBackgroundColor(colors.black)
-                tabbuttons[mons[i]] = {}
-                if crnttab.init then crnttab:init(lwin) end
-                if crnttab.display then crnttab:display(lwin,nil,mons[i]) end
-                monitor_settings[mons[i]].lastTab = crnttabstring
-            elseif (crnttabstring == monitor_settings[mons[i]].lastTab) and (crnttab ~= nil) then
+                tabbuttons[cmon] = {}
+                if crnttab.init then crnttab:init(lwin) end     -- Not currently used but can be used to add buttons and make other things run before the tab is displayed
+                if crnttab.display then crnttab:display(lwin,nil,cmon) end -- Actually displays information!
+                crntlasttab = crnttabstring
+            elseif (crnttabstring == crntlasttab) and (crnttab ~= nil) then
                 getInfo()
-                if crnttab.display then crnttab:display(lwin,nil,mons[i]) end
+                if crnttab.display then crnttab:display(lwin,nil,cmon) end
             else
-                log("'"..mons[i].."'".." switched to unknown tab!",3)
+                log("'"..cmon.."'".." switched to unknown tab!",3)
             end
         end
         wait(10)
     end
+    wins = nil
+    log("Escaped loop, clearing windows",2)
 end
 
 if always_load_settings == true then
-    capi.tabeSave(monitor_settings,settings_save_file)
+    capi.tableSave(monitor_settings,settings_save_file)
 end
 
 log("EOF reached",1)
