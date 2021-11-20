@@ -1,7 +1,7 @@
--- V2.2
+-- V2.4
 -- All Rights Reserved, if file bellow is edited in anyway do not redistribute!
 
--- Settings below starting on line 37 all vars are change able!
+-- Settings below are changeable
 
 --[[
 Credits (C):
@@ -10,54 +10,16 @@ Credits (C):
     Minecraft:  ClosetRedPanda
 ]]
 
-
-if false then     require("ClosetAPI.lua")     end -- Visual Studio
-local capi
-
-if fs.exists("ClosetAPI.lua") then  -- 1.12 support
-    os.loadAPI("ClosetAPI.lua")
-elseif fs.exists("ClosetAPI") then
-    os.loadAPI("ClosetAPI")
-else
-    error("API not found")
-end
-
-if _G["ClosetAPI.lua"] then  -- 1.12 support
-    capi = _G["ClosetAPI.lua"]
-elseif _G["ClosetAPI"] then
-    capi = _G["ClosetAPI"]
-else
-    error("API failed to load")
-end
-
-if capi == nil then error("API was not found") end
-
-local error_on_wrong_ver = nil -- set to nil to disable!
-local log
-local name = "Racc's Power Management"
-local short_name = "~R-P-M~"
-local name_color = colors.blue
-
-local motd = ""
-local motd_color = colors.lightBlue
-local use_live_motd = false
-local motd_link = "https://pastebin.com/raw/rxd5wQFc"
-local update_motd_with_f5 = false -- Disable for more preforment f5 refreshing ( Standered update refreshing not effected [f4] )
-
-local version = "2.4 SUPER WIP BUILD!"
-local build = "Latest"
-
-local enable_logging = true
+local capi, log
+local enable_logging = true  -- Setting to false may inprove performance
 local log_to = "left"
-local log_file = nil
+local log_file = nil -- not currently in use! 
 local Power_Scope_Modifier = nil
-
-local auto_detect = true -- if true then it will auto add all connected peripherals
-
-local mons = {}
-local reacs = {}
-local pds = {}
-local turbs = {}
+local always_load_settings = false -- WARNING this can cause problems if problems are common while restarting the program then delete the save file or set to false!
+local settings_save_file = "RPM2_Monitor_Settings"
+local default_monitor_scale = 1
+local default_monitor_tab = "all"
+local monitor_settings
 local theme_colors = {
     power = colors.pink,
     reacs = colors.purple,
@@ -65,21 +27,51 @@ local theme_colors = {
     all = colors.cyan,
 }
 
-local reacs_data = {}
-local pds_data = {}
-local mons_data = {}
-local turbs_data = {}
+local auto_detect = true -- if true then it will auto add all connected peripherals
+local mons = {} -- if auto_detect is false use these to add peripherals
+local reacs = {}
+local pds = {}
+local turbs = {}
 
-local always_load_settings = false -- WARNING this can cause problems if problems are common while restarting the program then delete the save file or set to false!
-local settings_save_file = "RPM2_Monitor_Settings"
+local error_on_wrong_ver = nil -- set to nil to disable!
+local name = "Racc's Power Management"
+local short_name = "~R-P-M~"
+local name_color = colors.blue
+local motd = ""
+local motd_color = colors.lightBlue
+local use_live_motd = false
+local motd_link = "https://pastebin.com/raw/rxd5wQFc"
+local update_motd_with_f5 = false -- Disable for more preforment f5 refreshing ( Standered update refreshing not effected [f4] )
+local version = "2.4"
+-- Below arnt settings dont change them!
 
-local default_monitor_scale = 1
-local default_monitor_tab = "all"
-local monitor_settings
+
+if false then     require("ClosetAPI.lua")     end -- Visual Studio
+function loadCAPI()  --Closet API
+    if fs.exists("ClosetAPI.lua") then  -- 1.12 support
+        os.loadAPI("ClosetAPI.lua")
+    elseif fs.exists("ClosetAPI") then
+        os.loadAPI("ClosetAPI")
+    else
+        error("API not found")
+    end
+
+    if _G["ClosetAPI.lua"] then  -- 1.12 support
+        capi = _G["ClosetAPI.lua"]
+    elseif _G["ClosetAPI"] then
+        capi = _G["ClosetAPI"]
+    else
+        error("API failed to load")
+    end
+
+    if capi == nil then error("API was not found") end
+end
+loadCAPI()
+
+
 local function defineSettings()
     monitor_settings = {}
 end
-
 local startargs = {...}
 if startargs[1] == "update" or startargs[1] == "reset" then
     if fs.exists("Downloader.lua") == true then
@@ -131,23 +123,24 @@ term.setTextScale = function() end -- Fixes the only thing that monitors can do 
 local log_to_original_input
 
 
-local function preplog()
-
-    local function prepDebugMon()
-        if log_to == term then return term end
-        if peripheral.isPresent(log_to) == true then
-            local temp = peripheral.wrap(log_to)
-            temp.clear()
-            temp.setCursorPos(1,0)
-            return temp
-        end
+local function prepDebugMon()
+    if peripheral.isPresent(log_to) == true then
+        local temp = peripheral.wrap(log_to)
+        temp.clear()
+        temp.setCursorPos(1,0)
+        return temp
     end
-    
-    log = APIdebug:prepLog(enable_logging,prepDebugMon(),nil,nil,nil)
+end
+local function preplog()
+    if log_to == term or log_to == "term" then
+        log_to = nil
+    end
+    local l = prepDebugMon()
+    log = capi.APIdebug:prepLog(enable_logging,l,nil,nil,nil)
     log("Log output is ready",1)
 end
-
 preplog()
+
 log("Logging is enabled",1)
 
 local function loadSettings()
@@ -218,20 +211,28 @@ local function autoDetect()
     end
 end
 
+local reacs_data = {}
+local pds_data = {}
+local mons_data = {}
+local turbs_data = {}
+local pmons = {}
+
 local function prep()
     log("running prep()",1)
     log("Removing faulty peripherals",1)
+    pmons = {}
     for i = 1,#mons do
         if mons[i] ~= nil then
             if peripheral.isPresent(mons[i]) == false then
                 log("'"..mons[i].."' Not found, Removing",2)
                 table.remove(mons,i)
             end
-            if mons[i] == log_to_original_input and enable_logging == true then 
+            if mons[i] == log_to and enable_logging == true then 
                 log("'"..mons[i].."' is debug mon, Removing",2)
                 table.remove(mons,i)
             end
         end
+        pmons[mons[i]] = peripheral.wrap(mons[i])
     end
     for i = 1,#reacs do
         if peripheral.isPresent(reacs[i]) == false then
@@ -245,6 +246,7 @@ local function prep()
             table.remove(pds,i)
         end
     end
+    
 end
 
 local function totalTable(intable)
@@ -691,9 +693,9 @@ local function tabDef()
         }
     end
     local tabcount = 0
-    for v,k in pairs(tabs) do
+    for k,v in pairs(tabs) do
         if k ~= "amount" then
-            if v.display and v.size and v.name and v.theme then
+            if v.display and v.name and v.theme then
                 log("Checked '"..k.."' and it has all required entires",1)
                 tabcount = tabcount +1
             else
@@ -712,8 +714,7 @@ local function tabDef()
 end
 
 
-
-bottomBar = {
+local bottomBar = {
     display = function(self,mon,data)
         local lmon = mon
         local lTabs = {
@@ -824,7 +825,7 @@ bottomBar = {
         return mons
     end,
 }
-topBar = {
+local topBar = {
     display = function(self,mon,data)
         if peripheral.isPresent(mon) == true then
             local mon = peripheral.wrap(mon)
@@ -981,7 +982,7 @@ end
 
 readyKeys()
 readyEvents()
-local function eventHandler(event)
+function eventHandler(event)
     --log("eventHandler passed: "..event[1],1)
     for k,v in pairs(event_list) do
         local crnt = v.events
@@ -1013,18 +1014,10 @@ end
 
 local function prepMonitorSettings()
     for i = 1,#mons do
-        if monitor_settings[mons[i]] == nil then
-            monitor_settings[mons[i]] = {}
-        end
-        if monitor_settings[mons[i]].currentTab == nil then
-            monitor_settings[mons[i]].currentTab = default_monitor_tab
-        end
-        if monitor_settings[mons[i]].scale == nil then
-            monitor_settings[mons[i]].scale = default_monitor_scale
-        end
-        if monitor_settings[mons[i]].excludeTabs == nil then
-            monitor_settings[mons[i]].excludeTabs = {}
-        end
+        monitor_settings[mons[i]] = monitor_settings[mons[i]] or {}
+        monitor_settings[mons[i]].currentTab = monitor_settings[mons[i]].currentTab or default_monitor_tab
+        monitor_settings[mons[i]].scale = monitor_settings[mons[i]].scale or default_monitor_scale
+        monitor_settings[mons[i]].excludeTabs = monitor_settings[mons[i]].excludeTabs or {}
     end
 end
 
@@ -1060,7 +1053,7 @@ while terminate == false do -- "Escape" step
             lwin.setCursorPos(1,1)
             lwin.setBackgroundColor(colors.black)
 
-            local crntset = monitor_settings[cmon] -- setting up args to reduce refering to large tables
+             -- setting up args to reduce refering to large tables
             local crnttabstring = monitor_settings[cmon].currentTab
             local crnttab = tabs[monitor_settings[cmon].currentTab] -- The tabs table, for example in "all" it would hold the display class important other information
             local crntlasttab = monitor_settings[cmon].lastTab
@@ -1069,13 +1062,12 @@ while terminate == false do -- "Escape" step
                 log("'"..cmon.."'".." changed tab to "..crnttabstring,2)
                 lwin.clear()
                 lwin.setBackgroundColor(colors.black)
-                tabbuttons[cmon] = {}
                 if crnttab.init then crnttab:init(lwin) end     -- Not currently used but can be used to add buttons and make other things run before the tab is displayed
-                if crnttab.display then crnttab:display(lwin,nil,cmon) end -- Actually displays information!
-                crntlasttab = crnttabstring
+                crnttab:display(lwin,nil,cmon) -- Actually displays information!
+                monitor_settings[cmon].lastTab = crnttabstring
             elseif (crnttabstring == crntlasttab) and (crnttab ~= nil) then
                 getInfo()
-                if crnttab.display then crnttab:display(lwin,nil,cmon) end
+                crnttab:display(lwin,nil,cmon)
             else
                 log("'"..cmon.."'".." switched to unknown tab!",3)
             end

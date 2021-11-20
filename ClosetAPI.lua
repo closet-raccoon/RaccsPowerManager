@@ -60,14 +60,14 @@ FileManager = {
     CurrentFileW = "",
     CurrentFileR = "",
     OpenFileW = function(file)
-        if fs.getFreeSpace(file) <= 0 then APIdebug.log("Error no space left on computer!",5) end
+        if fs.getFreeSpace(file) <= 0 then log("Error no space left on computer!",5) end
         FileManager.CurrentFileW = fs.open(file,"w")
     end,
     OpenFileR = function(file)
         FileManager.CurrentFileR = fs.open(file,"r")
     end,
     WriteLine = function(text,file)
-        if FileManager.CurrentFileW == nil then APIdebug.log("") end
+        if FileManager.CurrentFileW == nil then log("") end
         FileManager.CurrentFileW:writeLine(text)
         FileManager.CurrentFileW:flush()
     end,
@@ -100,29 +100,32 @@ function APIdebug:prepLog(debugvar,lmon,levelt,levelc,halt)
         end
         return
     end
-    self.levelt = levelt or {
+    local lmon = lmon or term
+    local halt = halt or 5
+    local levelt = levelt or {
         "Info",
         "Warn",
         "Error",
         "PANIC NO HALT",
         "PANIC",
     }
-    self.levelc = levelc or {
+    local levelc = levelc or {
         colors.white,
         colors.yellow,
         colors.red,
         colors.red,
         colors.red,
     }
-    self.log = function(text,level)
+    function log(text,level)
         local level = level or 1
-        local lc = self.levelc[level] or colors.red
-        local lt = self.levelt[level] or "PANIC"
-        drawLineText("["..self.currentlog.."] - "..lt.."- "..text,lc,lmon,true)
+        local lc = levelc[level] or colors.red
+        local lt = levelt[level] or "PANIC"
+        text = "["..self.currentlog.."] - "..lt.."- "..text
+        drawLineText(text,lc,lmon,true)
         self.currentlog = self.currentlog+1
         if level >= halt then os.queueEvent("panic","halt") os.queueEvent("terminate")  end
     end
-    return self.log
+    return log
 end
 
 
@@ -139,10 +142,10 @@ drawLineText = function(text,color_text,lmon,clearfront)
         drawText(1,lastposY+1,text,color_text,nil,lmon,true)
     end
     if clearfront == true then
-        local y,x = lmon.getCursorPos()
-        lmon.setCursorPos(1,x+1)
+        local x,y= lmon.getCursorPos()
+        lmon.setCursorPos(1,y+1)
         lmon.clearLine()
-        lmon.setCursorPos(y,x)
+        lmon.setCursorPos(x,y)
     end
 end
 
@@ -151,12 +154,12 @@ drawText = function(x,y,text,color_text,color_background,lmon,clear)
     color_background = color_background or colors.black
     lmon = lmon or term
 
-    if clear then lmon.clearLine() end
     local lastcolor = lmon.getTextColor() --saving last color
     local lastbcolor = lmon.getBackgroundColor()
     lmon.setCursorPos(x,y)
     lmon.setBackgroundColor(color_background)
     lmon.setTextColor(color_text)
+    if clear then lmon.clearLine() end
     lmon.write(text)
     lmon.setBackgroundColor(lastbcolor)  --restoring last color
     lmon.setTextColor(lastcolor)
@@ -234,8 +237,8 @@ end
 ---@param table table
 ---@param name string
 function tableSave(table,name)
-    if type(name) ~= "string" then APIdebug.log("TabeSave didn't get a string name!",4) return end
-    if table == nil then APIdebug.log("TabeSave didn't get a Table, it got nil!",4) return end
+    if type(name) ~= "string" then log("TabeSave didn't get a string name!",4) return end
+    if table == nil then log("TabeSave didn't get a Table, it got nil!",4) return end
     local file = fs.open(name,"w")
     file.write(textutils.serialize(table))
     file.close()
