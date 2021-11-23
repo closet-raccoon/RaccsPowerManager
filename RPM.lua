@@ -46,11 +46,20 @@ local is112 = not (tonumber(string.sub(os.version(),8)) < 1.79)
 
 if false then     require("ClosetAPI.lua") require("cc os")     end -- Visual Studio
 function loadCAPI()  --Closet API
-    if is112 == true then
-        require("ClosetAPI")
+    if fs.exists("ClosetAPI.lua") then  -- 1.12 support
+        os.loadAPI("ClosetAPI.lua")
+    elseif fs.exists("ClosetAPI") then
+        os.loadAPI("ClosetAPI")
     else
-
+        error("API not found")
     end
+    
+    if _G["ClosetAPI.lua"] then  -- 1.12 support
+        capi = _G["ClosetAPI.lua"]
+    elseif _G["ClosetAPI"] then
+        capi = _G["ClosetAPI"]
+    end
+    
     if capi == nil then error("API was not found") end
 end
 loadCAPI()
@@ -259,7 +268,7 @@ local function totalTable(intable)
     return outtable
 end
 
-local function getInfo1710()
+local function getInfo()
     for i = 1,#pds do 
         if peripheral.isPresent(pds[i]) == false then 
             log("'"..pds[i].."' was not found while getting info!",3)
@@ -332,21 +341,6 @@ local function getInfo1710()
         reacs = totalTable(reacs_data)
     }
 end
-
-
-local getInfo
-if is112 == false then
-    log("MC version is lower then 1.12",1)
-    getInfo = getInfo1710
-elseif is112 == true then
-    log("MC version is 1.12 or higher",2)
-    getInfo = getInfo1710
-else
-    log("is112 wasnt true or false?",5)
-end
-
-
-
 
 local function bwrite(text,x,y,mon,clear)
     if mon == nil or type(mon) ~= "table" then log("Basic write got bad mon variable",2) return end
@@ -1080,8 +1074,6 @@ if always_load_settings == true then
     capi.tableSave(monitor_settings,settings_save_file)
 end
 
-log("EOF reached",1)
-capi.FileManager.CloseCurrentW()
 term.clear()
 term.setCursorPos(1,1)
 term.setTextColor(name_color)
@@ -1094,5 +1086,6 @@ if capi.APIdebug.panics then
 else
     print("Panics table is nil?")
 end
+log("EOF reached",1)
 
 -- You actually scrolled this far down...
