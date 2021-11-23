@@ -10,7 +10,7 @@ Credits (C):
     Minecraft:  ClosetRedPanda
 ]]
 local capi, log
-local enable_logging = true  -- Setting to false may inprove performance
+local enable_logging = false  -- Setting to false may inprove performance
 local log_to = "right"
 local log_file = nil -- not currently in use! 
 local Power_Scope_Modifier = nil
@@ -32,7 +32,6 @@ local reacs = {}
 local pds = {}
 local turbs = {}
 
-local error_on_wrong_ver = nil -- set to nil to disable!
 local name = "Racc's Power Management"
 local short_name = "~R-P-M~"
 local name_color = colors.blue
@@ -40,29 +39,18 @@ local motd = ""
 local motd_color = colors.lightBlue
 local use_live_motd = false
 local motd_link = "https://pastebin.com/raw/rxd5wQFc"
-local update_motd_with_f5 = false -- Disable for more preforment f5 refreshing ( Standered update refreshing not effected [f4] )
 local version = "2.4"
 -- Below arnt settings dont change them!
 
+local is112 = not (tonumber(string.sub(os.version(),8)) < 1.79)
 
-if false then     require("ClosetAPI.lua")     end -- Visual Studio
+if false then     require("ClosetAPI.lua") require("cc os")     end -- Visual Studio
 function loadCAPI()  --Closet API
-    if fs.exists("ClosetAPI.lua") then  -- 1.12 support
-        os.loadAPI("ClosetAPI.lua")
-    elseif fs.exists("ClosetAPI") then
-        os.loadAPI("ClosetAPI")
+    if is112 == true then
+        require("ClosetAPI")
     else
-        error("API not found")
-    end
 
-    if _G["ClosetAPI.lua"] then  -- 1.12 support
-        capi = _G["ClosetAPI.lua"]
-    elseif _G["ClosetAPI"] then
-        capi = _G["ClosetAPI"]
-    else
-        error("API failed to load")
     end
-
     if capi == nil then error("API was not found") end
 end
 loadCAPI()
@@ -101,7 +89,7 @@ if startargs[1] == "update" or startargs[1] == "reset" then
                 term.setTextColor(colors.white)
              end
             local script = resp.readAll()
-            local installer, err2 = loadstring(script)
+            local installer, err2 = load(script)
             if installer and not (err1 or err2) then
                 print("Download completed")
                 installer()
@@ -347,15 +335,14 @@ end
 
 
 local getInfo
-if tonumber(string.sub(os.version(),8)) < 1.79 then
+if is112 == false then
     log("MC version is lower then 1.12",1)
-    log("1.7.10 is the prefered version to use this with!")
+    getInfo = getInfo1710
+elseif is112 == true then
+    log("MC version is 1.12 or higher",2)
     getInfo = getInfo1710
 else
-    log("MC version is 1.12 or higher",2)
-    log("1.7.10 is the prefered version to use this with!",2)
-    if error_on_wrong_ver ~= nil then error("MC version is 1.12 or higher, 1.7.10 is the prefered version to use this with!") end
-    getInfo = getInfo1710
+    log("is112 wasnt true or false?",5)
 end
 
 
@@ -778,7 +765,6 @@ local bottomBar = {
                 monitor = "all",
                 name = "refresh",
                 delete = function()
-                    return
                 end,
             }
         }
@@ -827,8 +813,8 @@ local topBar = {
     display = function(self,mon,data)
         if peripheral.isPresent(mon) == true then
             local mon = pmons[mon]
-            local cx,cy = mon.getCursorPos()
-            local mx,my = mon.getSize()
+            local _,cy = mon.getCursorPos()
+            local mx,_ = mon.getSize()
             mon.setTextColor(name_color)
             bwrite(name, mx/2 - (#name/2) + 1 ,cy,mon,true)
             mon.setTextColor(motd_color)
@@ -861,7 +847,7 @@ local key_events = {
             log("test panic",5)
         end,
         log = true,
-    }
+    },
 }
 
 local reversed_keys = {}
@@ -942,6 +928,20 @@ local event_list = {
         },
         log = true,
     },
+    execute = {
+        run = function(self,events)
+            local script = load(events)
+            local resp = {pcall(script)}
+            log("Execute: "..tostring(resp[1]).."  Result: "..tostring(resp[2]))
+            --os.queueEvent("exer",resp[1],resp[2])
+        end,
+        events = {
+            "exe",
+            "exc",
+            "execute"
+        },
+        log = true,
+    }
 
 }
 
@@ -952,7 +952,7 @@ local function readyEvents()
         "log",
     }
     for k,v in pairs(event_list) do
-        if k.events == nil then
+        if v.events ~= nil then
             for i = 1,#required do
                 if v[required[i]] == nil then
                     event_list[k] = nil
@@ -971,14 +971,12 @@ local function readyKeys()
         "log",
     }
     for k,v in pairs(key_events) do
-        if k.events == nil then
-            for i = 1,#required do
-                if v[required[i]] == nil then
-                    event_list[k] = nil
-                    log("Removed "..k.." because of missing table variable!",3)
-                    log(required[i],3)
-                    break
-                end
+        for i = 1,#required do
+            if v[required[i]] == nil then
+                event_list[k] = nil
+                log("Removed "..k.." because of missing table variable!",3)
+                log(required[i],3)
+                break
             end
         end
     end
@@ -1024,12 +1022,13 @@ reShellTerm()
 while terminate == false do -- "Escape" step
     running = true
     log("Entering loop")
-    autoDetect()
+    if auto_detect == true then
+        autoDetect()
+    end
     prep()
     prepMonitorSettings()
     tabDef()
     
-
     local wins = {}
     for i = 1,#mons do
         local lmon = pmons[mons[i]]

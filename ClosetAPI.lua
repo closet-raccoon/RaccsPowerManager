@@ -4,12 +4,8 @@ ClosetAPI version 1.8
 ]]--
 
 local p = peripheral
-local pw = p.wrap
-local args = {...}  --Incase i ever need then when debuging
-local arg1 = args[1]
-local arg2 = args[2]
-local debug = true  --Enable this to disable updating and/or if you are changing code in here
-local version ="1.8" -- added added caching for log its functionaly a lot diffrent please update your code!
+
+if false then require("cc os") end -- adds os fields
 
 ---@return table sorted-perpherals
 getAllPeripherals = function()
@@ -57,16 +53,22 @@ getAllPeripherals = function()
 end
 
 FileManager = {
+    ---@type file*
     CurrentFileW = "",
+    ---@type file*
     CurrentFileR = "",
+    ---@return file*
+    ---@param file string
     OpenFileW = function(file)
         if fs.getFreeSpace(file) <= 0 then log("Error no space left on computer!",5) end
         FileManager.CurrentFileW = fs.open(file,"w")
     end,
+    ---@return file*
+    ---@param file string
     OpenFileR = function(file)
         FileManager.CurrentFileR = fs.open(file,"r")
     end,
-    WriteLine = function(text,file)
+    WriteLine = function(text)
         if FileManager.CurrentFileW == nil then log("") end
         FileManager.CurrentFileW:writeLine(text)
         FileManager.CurrentFileW:flush()
@@ -231,9 +233,6 @@ function numbShorten(numb,places,returntype) -- Input Number, Floor Significance
         pfnumb = math.floor( numb / 10^(count*3) *10^places )/10^places
         return pfnumb..letters[count]
     end
-end
-function numbShorten2(a,b,c) -- DONT USE moved to numbShorten
-    return numbShorten(a,b,c)
 end
 
 --Some table saving tactics taken from the wiki.
