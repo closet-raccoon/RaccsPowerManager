@@ -9,10 +9,9 @@ Credits (C):
     Discord:    Closet Raccoon#5092  -- Bug reports are welcome
     Minecraft:  ClosetRedPanda
 ]]
-
 local capi, log
 local enable_logging = true  -- Setting to false may inprove performance
-local log_to = "left"
+local log_to = "right"
 local log_file = nil -- not currently in use! 
 local Power_Scope_Modifier = nil
 local always_load_settings = false -- WARNING this can cause problems if problems are common while restarting the program then delete the save file or set to false!
@@ -200,14 +199,10 @@ local function autoDetect()
     if d == {} or d == nil or type(d) ~= "table" then
         log("autoDetect returned nothing",4)
     else
-        reacs = {}
-        pds = {}
-        mons = {}
-        turbs = {}
-        turbs = d.turbs
-        reacs = d.reacs
-        pds = d.pds
-        mons = d.mons
+        turbs = d.turbs or {}
+        reacs = d.reacs or {}
+        pds = d.pds or {}
+        mons = d.mons or {}
     end
 end
 
@@ -215,8 +210,21 @@ local reacs_data = {}
 local pds_data = {}
 local mons_data = {}
 local turbs_data = {}
-local pmons = {}
+local preacs,ppds,pturbs,pmons
 
+local function wrapedTables(tab,wrapname)
+    log("Wraping and preping "..tostring(tab),1)
+    local temp = {}
+    for i = 1,#tab do
+        if peripheral.isPresent(tab[i]) == false then
+            log("'"..tab[i].."' Not found, Removing",2)
+            table.remove(tab,i)
+        else
+            temp[tab[i]] = peripheral.wrap(tab[i])
+        end
+    end
+    return temp
+end
 local function prep()
     log("running prep()",1)
     log("Removing faulty peripherals",1)
@@ -226,27 +234,17 @@ local function prep()
             if peripheral.isPresent(mons[i]) == false then
                 log("'"..mons[i].."' Not found, Removing",2)
                 table.remove(mons,i)
-            end
-            if mons[i] == log_to and enable_logging == true then 
+            elseif mons[i] == log_to and enable_logging == true then 
                 log("'"..mons[i].."' is debug mon, Removing",2)
                 table.remove(mons,i)
+            else
+                pmons[mons[i]] = peripheral.wrap(mons[i])
             end
         end
-        pmons[mons[i]] = peripheral.wrap(mons[i])
     end
-    for i = 1,#reacs do
-        if peripheral.isPresent(reacs[i]) == false then
-            log("'"..reacs[i].."' Not found, Removing",2)
-            table.remove(reacs,i)
-        end
-    end
-    for i = 1,#pds do
-        if peripheral.isPresent(pds[i]) == false then
-            log("'"..pds[i].."' Not found, Removing",2)
-            table.remove(pds,i)
-        end
-    end
-    
+    preacs = wrapedTables(reacs)
+    ppds = wrapedTables(pds)
+    pturbs = wrapedTables(turbs)
 end
 
 local function totalTable(intable)
@@ -279,10 +277,10 @@ local function getInfo1710()
             log("'"..pds[i].."' was not found while getting info!",3)
         else
             local a,b,c,d,e,f,g,h   --Indvidual 
-            local crnt = peripheral.wrap(pds[i])
+            local crnt = ppds[pds[i]]
             a = crnt.getEnergyStored()
-            if crnt.getMaxEnergyStored == nil and crnt.getEnergyCapacity ~= nil then  b = crnt.getEnergyCapacity() end
-            if crnt.getMaxEnergyStored ~= nil then  b = crnt.getMaxEnergyStored() end
+            b = crnt.getEnergyCapacity or crnt.getMaxEnergyStored
+            b = b()
  
             f = math.floor(a/b*10)/10
             pds_data[pds[i]] = {
@@ -301,7 +299,7 @@ local function getInfo1710()
         if peripheral.isPresent(reacs[i]) == false then
             log("'"..reacs[i].."' was not found while getting info!",3)
         else
-            local crnt = peripheral.wrap(reacs[i])
+            local crnt = preacs[reacs[i]]
             local cdata = {
                 energyStored = math.floor(crnt.getEnergyStored()*10) /10                ,-- 1  Energy
                 maxEnergy    = 10000000                                                 ,-- 2  Max Energy
@@ -325,7 +323,7 @@ local function getInfo1710()
         if peripheral.isPresent(turbs[i]) == false then
             log("'"..turbs[i].."' was not found while getting info!",3)
         else
-            local crnt = peripheral.wrap(turbs[i])
+            local crnt = pturbs[turbs[i]]
             local cdata = {
                 energyStored = math.floor(crnt.getEnergyStored()*10) /10                ,-- 1  Energy
                 maxEnergy    = 10000000                                                 ,-- 2  Max Energy
@@ -348,7 +346,7 @@ local function getInfo1710()
 end
 
 
-
+local getInfo
 if tonumber(string.sub(os.version(),8)) < 1.79 then
     log("MC version is lower then 1.12",1)
     log("1.7.10 is the prefered version to use this with!")
@@ -739,7 +737,7 @@ local bottomBar = {
                 end
             end
 
-            mon = peripheral.wrap(mon)
+            mon = pmons[mon]
             local mX,mY = mon.getSize()
             local temp = math.abs(math.floor( mX /lTabs.amount))
             if temp < lTabs.amount then return end 
@@ -800,7 +798,7 @@ local bottomBar = {
             end
         end
 
-        local mon = peripheral.wrap(lmon)
+        local mon = pmons[lmon]
         local mX,mY = mon.getSize()
         local temp = math.abs(math.floor(mX/lTabs.amount))
         if temp < lTabs.amount then return end
@@ -828,7 +826,7 @@ local bottomBar = {
 local topBar = {
     display = function(self,mon,data)
         if peripheral.isPresent(mon) == true then
-            local mon = peripheral.wrap(mon)
+            local mon = pmons[mon]
             local cx,cy = mon.getCursorPos()
             local mx,my = mon.getSize()
             mon.setTextColor(name_color)
@@ -858,6 +856,12 @@ local key_events = {
         end,
         log = false,
     },
+    f9 = {
+        run = function(self,events)
+            log("test panic",5)
+        end,
+        log = true,
+    }
 }
 
 local reversed_keys = {}
@@ -988,18 +992,12 @@ function eventHandler(event)
         local crnt = v.events
         local count = 0
         if crnt == nil then log(k.." doesnt have any list any call events!",3) else
-            local isnt = false
             for i = 1,#crnt do
-                if event[i] == crnt[i] then
-                    count = count + 1
-                else
-                    isnt = true
+                if event[1] == crnt[i] then
+                    if v.log == true then log("running event "..k,1) end
+                    v:run(event)
                     break
                 end
-            end
-            if count == #crnt and isnt == false then
-                if v.log == true then log("running event "..k,1) end
-                v:run(event)
             end
         end
     end
@@ -1034,18 +1032,20 @@ while terminate == false do -- "Escape" step
 
     local wins = {}
     for i = 1,#mons do
-        local lmon = peripheral.wrap(mons[i])
+        local lmon = pmons[mons[i]]
         lmon.setCursorPos(1,1)
         topBar:display(mons[i])
         bottomBar:display(mons[i])
         bottomBar:addButtons(mons[i])
-        local lmon = peripheral.wrap(mons[i])
+        local lmon = pmons[mons[i]]
         local mx,my = lmon.getSize()
         wins[mons[i]] = window.create(lmon,1,3,mx,my-4)
     end
-
-    getInfo()
+    p=0
+    --getInfo()
     while running == true do -- Display loop
+        p = p+1
+        getInfo()
         for i = 1,#mons do
                                 -- theres no need to wrap the perpheral here cause we use windows now
             local cmon = mons[i]
@@ -1066,13 +1066,12 @@ while terminate == false do -- "Escape" step
                 crnttab:display(lwin,nil,cmon) -- Actually displays information!
                 monitor_settings[cmon].lastTab = crnttabstring
             elseif (crnttabstring == crntlasttab) and (crnttab ~= nil) then
-                getInfo()
                 crnttab:display(lwin,nil,cmon)
             else
                 log("'"..cmon.."'".." switched to unknown tab!",3)
             end
         end
-        wait(10)
+        wait(.5)
     end
     wins = nil
     log("Escaped loop, clearing windows",2)
@@ -1089,5 +1088,12 @@ term.setCursorPos(1,1)
 term.setTextColor(name_color)
 print(name.."  "..version)
 term.setTextColor(colors.white)
+if capi.APIdebug.panics then
+    for i = 1,#capi.APIdebug.panics do
+        print("Panic "..i..": "..capi.APIdebug.panics[i])
+    end
+else
+    print("Panics table is nil?")
+end
 
 -- You actually scrolled this far down...
