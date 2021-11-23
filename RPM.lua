@@ -1071,7 +1071,7 @@ while terminate == false do -- "Escape" step
                 log("'"..cmon.."'".." switched to unknown tab!",3)
             end
         end
-        wait(.5)
+        wait(10)
     end
     wins = nil
     log("Escaped loop, clearing windows",2)
