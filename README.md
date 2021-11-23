@@ -9,12 +9,14 @@ if any errors occurre try doing it on singleplayer if errors persist please cont
 
 # Files:
 
+Downloader.lua - An updater / installer script that installs all necessary files.  Run this on you computer to install!
+
 RPM.lua - The script file itself.
 
 ClosetAPI.lua - The Required API for the script
 
 startup.lua - A file that will start RPM on startup of your computer
 
-Downloader.lua - An updater / installer script that installs all necessary files
-
 filelist - A file used internally with downloader.lua telling it what scripts to download
+
+cc os.lua - Adds fields and is only used for Visual Studio.
