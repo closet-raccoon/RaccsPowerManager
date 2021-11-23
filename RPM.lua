@@ -1060,8 +1060,8 @@ while terminate == false do -- "Escape" step
 
             if (crnttabstring ~= crntlasttab) and (crnttab ~= nil) then
                 log("'"..cmon.."'".." changed tab to "..crnttabstring,2)
-                lwin.clear()
                 lwin.setBackgroundColor(colors.black)
+                lwin.clear()
                 if crnttab.init then crnttab:init(lwin) end     -- Not currently used but can be used to add buttons and make other things run before the tab is displayed
                 crnttab:display(lwin,nil,cmon) -- Actually displays information!
                 monitor_settings[cmon].lastTab = crnttabstring
@@ -1071,7 +1071,7 @@ while terminate == false do -- "Escape" step
                 log("'"..cmon.."'".." switched to unknown tab!",3)
             end
         end
-        wait(.5)
+        wait(10)
     end
     wins = nil
     log("Escaped loop, clearing windows",2)

@@ -97,8 +97,8 @@ function APIdebug:prepLog(debugvar,lmon,levelt,levelc,halt)
     self.panics = {}
     if debugvar == false then 
         self.log = function(text,level)
-            if level == halt-1 then self.panics[#panics+1] = text os.queueEvent("panic")  elseif
-            level >= halt then self.panics[#panics+1] = text os.queueEvent("panic","halt") os.queueEvent("terminate") end
+            if level == halt-1 then self.panics[#self.panics+1] = text os.queueEvent("panic")  elseif
+               level >= halt then self.panics[#self.panics+1] = text os.queueEvent("panic","halt") os.queueEvent("terminate") end
         end
         return
     end
@@ -114,7 +114,7 @@ function APIdebug:prepLog(debugvar,lmon,levelt,levelc,halt)
     local levelc = levelc or {
         colors.white,
         colors.yellow,
-        colors.red,
+        colors.orange,
         colors.red,
         colors.red,
     }
@@ -125,8 +125,8 @@ function APIdebug:prepLog(debugvar,lmon,levelt,levelc,halt)
         text = "["..self.currentlog.."] - "..lt.."- "..text
         drawLineText(text,lc,lmon,true)
         self.currentlog = self.currentlog+1
-        if level == halt-1 then panics[#panics+1] = text os.queueEvent("panic")  elseif
-        level >= halt then panics[#panics+1] = text os.queueEvent("panic","halt") os.queueEvent("terminate") end
+        if level == halt-1 then self.panics[#self.panics+1] = text os.queueEvent("panic")  elseif
+            level >= halt then self.panics[#self.panics+1] = text os.queueEvent("panic","halt") os.queueEvent("terminate") end
     end
     return log
 end
