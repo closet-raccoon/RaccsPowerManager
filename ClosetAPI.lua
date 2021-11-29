@@ -9,7 +9,7 @@ local args = {...}  --Incase i ever need then when debuging
 local arg1 = args[1]
 local arg2 = args[2]
 local debug = true  --Enable this to disable updating and/or if you are changing code in here
-local version ="1.7.6" -- added minor 1.12 support for plethra peripherals ( more 1.12 suport very soon )
+local version ="1.8" -- added minor 1.12 support for plethra peripherals ( more 1.12 suport very soon )
 
 getAllPeripherals = function(silent) --Silent makes it not return the full table(Non-Silent by default)
 
